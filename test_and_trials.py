@@ -13,8 +13,9 @@ import collections
 import xml.etree.ElementTree as et
 import csv
 import pandas as pd
-path = "/home/nobot/Human_behavior/2017/train/test_folder"
-
+path_p = "/home/nobot/Human_behavior/2017/train/positive_examples_anonymous_chunks"
+path_n = "/home/nobot/Human_behavior/2017/train/negative_examples_anonymous_chunks"
+path_test = "/home/nobot/Human_behavior/2017/test"
 # l = os.listdir(path)
 # print(l)
 
@@ -87,39 +88,145 @@ def xml_parsing(xml_file):
         writings.append(xml_data)
         
     df = pd.DataFrame(writings)
-    
+    #print(df)
     #if there is no ID or Date return none
     try:
-      df = df.set_index(['ID', 'DATE'])
+      df = df
+      #df = df.set_index(['ID', 'DATE'])
     except:
       df =  None
       
     return df
   
+#training     
+#Positive  
+def train_positive_extractor():
+    subjects = []
+    frames = []
+    total_frames = []
+
+    for chunk in range(1,11):
+        chunks_p = os.listdir(path_p+'/chunk_'+str(chunk))
+        subjects = chunks_p
+        length = len(subjects)
+        for i in range(length):
+            xml_file = '/home/nobot/Human_behavior/2017/train/positive_examples_anonymous_chunks/chunk_' +str(chunk) + '/'+str(subjects[i])
+            frames = xml_parsing(xml_file)
+            total_frames.append(frames)
+
+            # print(frames)
+            
+            
+    DF = pd.concat(total_frames)
+    shape =  DF.shape
+    labels = np.ones((shape[0],1))
+    print(labels.shape)
+    DF['labels'] = labels
     
-  
-subjects = []
-frames = []
-total_frames = []
-for chunk in range(1,11):
-    chunks_p = os.listdir(path+'/chunk_'+str(chunk))
-    subjects = chunks_p
-    length = len(subjects)
-    for i in range(length):
-        xml_file = '/home/nobot/Human_behavior/2017/train/test_folder/chunk_' +str(chunk) + '/'+str(subjects[i])
-        frames = xml_parsing(xml_file)
-        total_frames.append(frames)
+    DF.to_csv('train_data_p.csv', sep=',')
+    return DF
+#negative 
+def train_negative_extractor():
+    subjects = []
+    frames = []
+    total_frames = []
+    debug = []
+    for chunk in range(1,11):
+        chunks_n = os.listdir(path_n+'/chunk_'+str(chunk))
+        subjects = chunks_n
+        length = len(subjects)
+        for i in range(length):
+            xml_file = '/home/nobot/Human_behavior/2017/train/negative_examples_anonymous_chunks/chunk_' +str(chunk) + '/'+str(subjects[i])
+            debug.append(subjects[i])
+            print(str(subjects[i] + 'suceeded'))
+            frames = xml_parsing(xml_file)
+            total_frames.append(frames)
 
-        # print(frames)
-        
-        
-DF = pd.concat(total_frames)
-DF.to_csv('train_data_p.csv', sep=',')
+            # print(frames)
+            
+            
+    DF = pd.concat(total_frames)
+    shape =  DF.shape
+    labels = np.zeros((shape[0],1))
+    print(labels.shape)
+    DF['labels'] = labels
+    
+    DF.to_csv('train_data_n.csv', sep=',')
+    return DF
+
+def pos_neg_concat(df1 , df2):
+    df_list = [df1 , df2]
+    concatenation = pd.concat(df_list)
+    concatenation.to_csv('all_train_data.csv', sep=',')
+
+def test_extractor():
+    subjects = []
+    frames = []
+    total_frames = []
+
+    for chunk in range(1, 11):
+        chunks_p = os.listdir(path_test + '/chunk_' + str(chunk))
+        subjects = chunks_p
+        length = len(subjects)
+        for i in range(length):
+            xml_file = '/home/nobot/Human_behavior/2017/test/chunk_' + str(chunk) + '/' + str(subjects[i])
+            frames = xml_parsing(xml_file)
+            total_frames.append(frames)
+
+
+            # print(frames)
+
+    DF = pd.concat(total_frames)
+    shape = DF.shape
+    data_list=[]
+    data_dic = {}
+
+    with open("/home/nobot/Human_behavior/2017/test/test_golden_truth.txt") as file:  # Use file to refer to the file object
+        data = file.readlines()
+        for i in data:
+            key = i[:-3]
+            #print(key + " " + "succeed")
+            value = i[-2]
+            data_dic.update({key:value})
+        #print("finished")
+
+    # labels = np.ones((shape[0], 1))
+    # print(labels.shape)
+    labels= []
+    print(DF['ID'])
+    for id in DF['ID']:
+        label = data_dic[id]
+        labels.append(label)
+    DF['labels'] = labels
+
+    # def createdoc(id, **kwargs):
+    #     # for id in DF['ID']:
+    #     if id == data_dic['
+    #         data_dic[id]
+    # # # print(type(answer), answer)
+    # #
+    # # doc = nlp(str(answer))
+    # return doc
+    #
+    # df['labels'] = df['ID'].apply(createdoc, axis='columns')
+    # df.head(3)
+    # DF['labels'] = labels
+
+    DF.to_csv('test_data.csv', sep=',')
+    return DF
+
+
+#train
+#positive_df = train_positive_extractor()
+#negative_df = train_negative_extractor()
+#pos_neg_concat(positive_df ,negative_df)
+
+#test
+test_extractor()
 
 
 
-        
-        
+
 # print(chunks_p)
 # print()
 
