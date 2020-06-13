@@ -88,13 +88,14 @@ def xml_parsing(xml_file):
         writings.append(xml_data)
         
     df = pd.DataFrame(writings)
+
     #print(df)
     #if there is no ID or Date return none
-    try:
-      df = df
-      #df = df.set_index(['ID', 'DATE'])
-    except:
-      df =  None
+    # try:
+    #   df = df
+    #   #df = df.set_index(['ID', 'DATE'])
+    # except:
+    #   df =  None
       
     return df
   
@@ -123,7 +124,7 @@ def train_positive_extractor():
     print(labels.shape)
     DF['labels'] = labels
     
-    DF.to_csv('train_data_p.csv', sep=',')
+    DF.to_csv('train_data_p.csv', sep=',',index=False)
     return DF
 #negative 
 def train_negative_extractor():
@@ -138,7 +139,7 @@ def train_negative_extractor():
         for i in range(length):
             xml_file = '/home/nobot/Human_behavior/2017/train/negative_examples_anonymous_chunks/chunk_' +str(chunk) + '/'+str(subjects[i])
             debug.append(subjects[i])
-            print(str(subjects[i] + 'suceeded'))
+            #print(str(subjects[i] + 'suceeded'))
             frames = xml_parsing(xml_file)
             total_frames.append(frames)
 
@@ -151,13 +152,13 @@ def train_negative_extractor():
     print(labels.shape)
     DF['labels'] = labels
     
-    DF.to_csv('train_data_n.csv', sep=',')
+    DF.to_csv('train_data_n.csv', sep=',',index=False)
     return DF
 
 def pos_neg_concat(df1 , df2):
     df_list = [df1 , df2]
     concatenation = pd.concat(df_list)
-    concatenation.to_csv('all_train_data.csv', sep=',')
+    concatenation.to_csv('all_train_data.csv', sep=',',index=False)
 
 def test_extractor():
     subjects = []
@@ -184,9 +185,9 @@ def test_extractor():
     with open("/home/nobot/Human_behavior/2017/test/test_golden_truth.txt") as file:  # Use file to refer to the file object
         data = file.readlines()
         for i in data:
-            key = i[:-3]
+            key = i[1:-3]
             #print(key + " " + "succeed")
-            value = i[-2]
+            value = int(i[-2])
             data_dic.update({key:value})
         #print("finished")
 
@@ -195,7 +196,7 @@ def test_extractor():
     labels= []
     print(DF['ID'])
     for id in DF['ID']:
-        label = data_dic[id]
+        label = data_dic.get(id)
         labels.append(label)
     DF['labels'] = labels
 
@@ -212,14 +213,14 @@ def test_extractor():
     # df.head(3)
     # DF['labels'] = labels
 
-    DF.to_csv('test_data.csv', sep=',')
+    DF.to_csv('test_data.csv', sep=',',index=False)
     return DF
 
 
 #train
-#positive_df = train_positive_extractor()
-#negative_df = train_negative_extractor()
-#pos_neg_concat(positive_df ,negative_df)
+positive_df = train_positive_extractor()
+negative_df = train_negative_extractor()
+pos_neg_concat(positive_df ,negative_df)
 
 #test
 test_extractor()
