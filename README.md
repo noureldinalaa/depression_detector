@@ -1,2 +1,2 @@
 # depression_detector
-we are trying to detect depression 
+Detecting Depression from social media (Reddit) . We have used dataset from erisk 2017 .
