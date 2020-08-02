@@ -65,3 +65,32 @@ class Depression_detection(object):
                         frames.append(frame)
 
         return frames
+
+    def prepare_test_dataframe(self,test_dataframe):
+        '''
+        Generate a dataframe that combine the test dataframe
+        with the ground truth labels.
+
+        :param test_dataframe:
+        :return: test dataset with labels
+        '''
+
+        test_dataframe= test_dataframe.set_index('ID')
+        test_gold_path = self.test_path.joinpath('./test_golden_truth.txt')
+        golden_truth_dataframe = pd.read_csv(str(test_gold_path),names=['ID','LABEL'], sep="\t")
+        print(golden_truth_dataframe.columns)
+        golden_truth_dataframe['ID'] = golden_truth_dataframe.ID.apply(self.remove_space)
+        golden_truth_dataframe = golden_truth_dataframe.set_index('ID')
+        #This one merge both of the dataframes considereing ID's arrangment.
+        golden_test_dataframe = pd.merge(test_dataframe, golden_truth_dataframe, how='left', left_index=True, right_index=True)
+
+        return golden_test_dataframe
+
+    def remove_space(self,subject_ID):
+        '''
+        It strip extra charachters in the subject (like extra spaces and /n)
+        :param string:
+        :return: stripped subject ID
+        '''
+        clean_subject_ID = subject_ID.strip()
+        return clean_subject_ID

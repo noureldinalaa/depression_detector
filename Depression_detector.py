@@ -19,11 +19,18 @@ training_positive_dateframe = pd.concat(Dd.parse_folder(training_positive_path))
 training_negative_dataframe = pd.concat(Dd.parse_folder(training_negative_path))
 test_dataframe = pd.concat(Dd.parse_folder(test_path))
 
-#add labels to positive and negative subjects
+#add labels to positive and negative subjects training dataset
 training_positive_dateframe['LABEL'] = 1
 training_negative_dataframe['LABEL'] = 0
 
+#adding label to test dataframe
+test_dataframe = Dd.prepare_test_dataframe(test_dataframe)
+
 #save them to csv file
-training_positive_dateframe.to_csv('training_positive_dateframe.csv')
-training_negative_dataframe.to_csv('training_negative_dataframe.csv')
+# training_positive_dateframe.to_csv('training_positive_dateframe.csv')
+# training_negative_dataframe.to_csv('training_negative_dataframe.csv')
+test_dataframe.to_csv('test_dataframe.csv')
+
+
+
 
