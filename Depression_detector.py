@@ -31,6 +31,14 @@ test_dataframe = Dd.prepare_test_dataframe(test_dataframe)
 # training_negative_dataframe.to_csv('training_negative_dataframe.csv')
 test_dataframe.to_csv('test_dataframe.csv')
 
+positive_training_file_CSV = 'training_positive_dateframe.csv'
+negative_training_file_CSV = 'training_negative_dataframe.csv'
 
+unified_training_df = Dd.Unifing_training_data(positive_training_file_CSV,negative_training_file_CSV)
+print(unified_training_df.shape)
+unified_training_df.set_index('ID')
+#COncatentenate title with text
+unified_training_df["TITLE_TEXT"] = unified_training_df["TITLE"] + unified_training_df["TEXT"]
+unified_training_df.to_csv('unified_training_df.csv')
 
 

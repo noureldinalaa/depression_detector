@@ -60,7 +60,7 @@ class Depression_detection(object):
             if directory.is_dir():
                 print(directory.name)
                 for file in directory.iterdir():
-                    if file.is_file() and not file.name.startswith('._'):
+                    if file.is_file():
                         frame = self.xml_parsing(file)
                         frames.append(frame)
 
@@ -88,9 +88,17 @@ class Depression_detection(object):
 
     def remove_space(self,subject_ID):
         '''
-        Strips extra characters in the subject (like extra spaces and /n)
+        It strip extra charachters in the subject (like extra spaces and /n)
         :param string:
         :return: stripped subject ID
         '''
         clean_subject_ID = subject_ID.strip()
         return clean_subject_ID
+
+    def Unifing_training_data(self,positive_training_file_CSV,negative_training_file_CSV):
+        positive_training_file_df= pd.read_csv(positive_training_file_CSV, index_col=0)
+        print(positive_training_file_df.shape)
+        negative_training_file_df = pd.read_csv(negative_training_file_CSV, index_col=0)
+        print(negative_training_file_df.shape)
+        unified_df = pd.concat([positive_training_file_df, negative_training_file_df])
+        return unified_df
