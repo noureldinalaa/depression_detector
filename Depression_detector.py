@@ -37,7 +37,7 @@ negative_training_file_CSV = 'training_negative_dataframe.csv'
 unified_training_df = Dd.Unifing_training_data(positive_training_file_CSV,negative_training_file_CSV)
 print(unified_training_df.shape)
 unified_training_df.set_index('ID')
-#COncatentenate title with text
+#Concatentenate title with text
 unified_training_df["TITLE_TEXT"] = unified_training_df["TITLE"] + unified_training_df["TEXT"]
 unified_training_df.to_csv('unified_training_df.csv')
 

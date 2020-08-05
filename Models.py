@@ -60,7 +60,7 @@ class Depression_detection(object):
             if directory.is_dir():
                 print(directory.name)
                 for file in directory.iterdir():
-                    if file.is_file():
+                    if file.is_file() and not file.name.startswith('._'):
                         frame = self.xml_parsing(file)
                         frames.append(frame)
 
@@ -88,7 +88,7 @@ class Depression_detection(object):
 
     def remove_space(self,subject_ID):
         '''
-        It strip extra charachters in the subject (like extra spaces and /n)
+        It strips extra characters in the subject (like extra spaces and /n)
         :param string:
         :return: stripped subject ID
         '''
