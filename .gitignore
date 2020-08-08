@@ -7,3 +7,15 @@ __pycache__/
 
 .vscode
 
+
+*.ipynb
+
+.ipynb_checkpoints/
+
+jupyterNotebooks/
+
+*.txt
+
+test_and_trials.py
+
+*.pk
