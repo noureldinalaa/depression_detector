@@ -6,7 +6,8 @@ import pandas as pd
 import pickle
 
 # get th parent path
-base_path = Path.cwd().parent
+base_path = Path.cwd().parent #Nour
+# base_path = Path.cwd() #Adrian
 training_positive_path = base_path.joinpath('./2017/train/positive_examples_anonymous_chunks')
 training_negative_path = base_path.joinpath('./2017/train/negative_examples_anonymous_chunks')
 test_path = base_path.joinpath('./2017/test')

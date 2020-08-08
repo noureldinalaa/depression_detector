@@ -58,7 +58,7 @@ class preprocessing(object):
     def vocab_to_int(self,tokens):
 
         '''
-        Annotate all the vocabs in the text with a corresponding integer
+        Annotate all the vocabs in the text with a corresponding integer.
         :return:
         '''
 
