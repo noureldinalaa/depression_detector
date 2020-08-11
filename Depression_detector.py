@@ -76,5 +76,11 @@ unified_training_df_preprocessed = pd.read_csv('./unified_training_df_preprocess
 Dp.downsampling(unified_training_df_preprocessed)
 downsampled_data = pd.read_csv('./downsampled_data.csv')
 
+#get tex_ints
+text_integers = Dp.text_ints_extract(downsampled_data)
+
+#pad the features
+seq_length = 50
+Dp.pad_features(text_integers, seq_length)
 
 
