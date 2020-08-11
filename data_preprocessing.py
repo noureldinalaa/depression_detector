@@ -6,6 +6,9 @@ from collections import Counter
 
 import pickle
 
+from sklearn.utils import resample
+import pandas as pd
+
 class preprocessing(object):
     def __init__(self):
 
@@ -141,7 +144,29 @@ class preprocessing(object):
         unified_training_df.to_csv('./unified_training_df_preprocessed.csv')
 
 
+    def downsampling(self,unified_training_df_preprocessed):
+        '''
+        downsampling majority(un)
+        :param unified_training_df_preprocessed:
+        :return:
+        '''
+        # separate minority and majority classes
+        un_depressed = unified_training_df_preprocessed[unified_training_df_preprocessed.LABEL == 0]
+        depressed = unified_training_df_preprocessed[unified_training_df_preprocessed.LABEL == 1]
 
+        undepressed_downsampled = resample(un_depressed,
+                                           replace=False,  # sample without replacement
+                                           n_samples=len(depressed),  # match minority n
+                                           random_state=27)  # reproducible results
+
+        # combine minority and downsampled majority
+        downsampled = pd.concat([undepressed_downsampled, depressed])
+
+        # checking counts
+        downsampled.LABEL.value_counts()
+
+        #save it to csv file
+        downsampled.to_csv('./downsampled_data.csv')
 
 
 
