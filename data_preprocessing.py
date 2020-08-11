@@ -9,11 +9,15 @@ import pickle
 from sklearn.utils import resample
 import pandas as pd
 
+import ast
+import numpy as np
+
 class preprocessing(object):
     def __init__(self):
 
         nlp = English()
         self.tokenizer = Tokenizer(nlp.vocab)
+
 
     def tokenization(self,unified_training_df):
         '''
@@ -168,9 +172,34 @@ class preprocessing(object):
         #save it to csv file
         downsampled.to_csv('./downsampled_data.csv')
 
+    def text_ints_extract(self,downsampled_data):
+        '''
+        get text_ints cell and save it each cell in a list of a global list
+        :param downsampled_data:
+        :return: text_integers
+        '''
 
+        text_integers = []
+        for x in downsampled_data.text_ints.array:
+            data = ast.literal_eval(x)
+            text_integers.append(data)
 
+        return text_integers
 
+    def pad_features(self,text_integers, seq_length):
+        ''' Return features of text_ints, where each text is padded with 0's
+            or truncated to the input seq_length.
+        '''
+        ## implement function
+        # getting the correct rows x cols shape
+        features = np.zeros((len(text_integers), seq_length), dtype=int)
+        # for each review, I grab that review
+        for i, row in enumerate(text_integers):
+            # this will take row and last columns and leave first columns with zeros (check last cell to understand) , then [:seq_length] will shrink long data
+
+            features[i, -len(row):] = np.array(row)[:seq_length]
+
+        return features
 
 
 
