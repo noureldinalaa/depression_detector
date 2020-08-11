@@ -21,7 +21,7 @@ class preprocessing(object):
         and finally tokenize it.
 
         :param unified_training_df:
-        :return:
+        :return: tokens
         '''
 
         #get punctautions from string
@@ -59,7 +59,7 @@ class preprocessing(object):
 
         '''
         Annotate all the vocabs in the text with a corresponding integer.
-        :return:
+        :return: self.vocab_to_int
         '''
 
         ## Build a dictionary that maps words to integers
@@ -67,9 +67,88 @@ class preprocessing(object):
         vocab = sorted(counts, key=counts.get, reverse=True)
         # print(vocab[:30])
         # 1 in enamurate means the dictionary will begin with one instead of 0
-        vocab_to_int = {word: ii for ii, word in enumerate(vocab, 1)}
+        self.vocab_to_int = {word: ii for ii, word in enumerate(vocab, 1)}
 
-        return vocab_to_int
+        return self.vocab_to_int
+    
+    # the next functions is for preprocessing data frame
+    def out_urls(self,text, **kwargs):
+        '''
+        remove urls from the text
+        :param text:
+        :param kwargs:
+        :return: text
+        '''
+        text = re.sub(r'http\S+', '', text)
+        return text
+
+    def out_punctuation(self,text, **kwargs):
+        '''
+        remove punctuations
+        :param text:
+        :param kwargs:
+        :return: text
+        '''
+        punctuations = string.punctuation
+        text = ''.join([c for c in text if c not in punctuations])
+        return text
+
+    def text_token(self,text, **kwargs):
+        '''
+        tokenize each cell
+        :param text:
+        :param kwargs:
+        :return: tokens
+        '''
+        words = self.tokenizer(text)
+        tokens = [token.lower_ for token in words if not token.is_space and not token.like_num]
+        return tokens
+
+    def text_ints(self,tokens, **kwargs):
+        '''
+        convert each text to integer
+        :param tokens:
+        :param kwargs:
+        :return: text_num
+        '''
+        text_num = [self.vocab_to_int[word] for word in tokens]
+        return text_num
+
+    def lenght_text(self,text_insts, **kwargs):
+        '''
+        get the length of each text in each cell
+        :param text_insts:
+        :param kwargs:
+        :return: length
+        '''
+
+        length = len(text_insts)
+        return length
+
+    def dataframe_preprocessing(self,unified_training_df):
+        '''
+        call the functions of preprocessing
+        :param unified_training_df:
+        :return:
+        '''
+        unified_training_df['urls_out'] = unified_training_df['TITLE_TEXT'].apply(self.out_urls, axis='columns')
+        unified_training_df['punctuation_out'] = unified_training_df['urls_out'].apply(self.out_punctuation, axis='columns')
+        unified_training_df['text_tokens'] = unified_training_df['punctuation_out'].apply(self.text_token, axis='columns')
+        unified_training_df['text_ints'] =  unified_training_df['text_tokens'].apply(self.text_ints, axis='columns')
+        unified_training_df['length'] = unified_training_df['text_ints'].apply(self.lenght_text, axis='columns')
+        # neglect all cells(subjects) with zero length (text and the label,..)
+        unified_training_df = unified_training_df[unified_training_df.length != 0]
+        unified_training_df.to_csv('./unified_training_df_preprocessed.csv')
+
+
+
+
+
+
+
+
+
+
 
 
 
