@@ -1,6 +1,7 @@
 #imports
 from parsing_data import Depression_detection
 from data_preprocessing import preprocessing
+from training_testing import training_testing
 from pathlib import Path
 import pandas as pd
 import pickle
@@ -19,6 +20,8 @@ Dd = Depression_detection(base_path,
 
 Dp_training = preprocessing()
 Dp_testing = preprocessing()
+
+RNN_preparation =  training_testing()
 
 ## Concatenate all the frames for each folder after parsing them
 # training_positive_dateframe = pd.concat(Dd.parse_folder(training_positive_path))
@@ -56,10 +59,11 @@ unified_training_df = pd.read_csv('unified_training_df.csv')
 unified_training_df = unified_training_df.drop(['TITLE', 'INFO', 'TEXT' ], axis=1)
 #unify test dataframe
 test_df = pd.read_csv('test_dataframe.csv')
-test_df.set_index('ID')
-test_df["TITLE_TEXT"] = test_df["TITLE"] + test_df["TEXT"]
-test_df.to_csv('unified_test_df.csv')
+# test_df.set_index('ID')
+# test_df["TITLE_TEXT"] = test_df["TITLE"] + test_df["TEXT"]
+# test_df.to_csv('unified_test_df.csv')
 unified_test_df = pd.read_csv('unified_test_df.csv')
+unified_test_df = unified_test_df.drop(['TITLE', 'INFO', 'TEXT' ], axis=1)
 
 
 # tokens = Dp_training.tokenization(unified_training_df,train=True)
@@ -87,7 +91,7 @@ vocab_to_ints_testing = Dp_testing.vocab_to_int(tokens_test)
 unified_training_df_preprocessed = pd.read_csv('./unified_training_df_preprocessed.csv')
 
 #Preprocessing for testing
-Dp_testing.dataframe_preprocessing(unified_test_df)
+# Dp_testing.dataframe_preprocessing(unified_test_df)
 unified_testing_df_preprocessed = pd.read_csv('./unified_testing_df_preprocessed.csv')
 
 # we have unbalanced data in which non depressed data is much more
@@ -117,3 +121,12 @@ training_labels = Dp_training.get_labels(downsampled_data.LABEL)
 
 testing_features = Dp_testing.pad_features(text_integers_testing, seq_length)
 testing_labels = Dp_testing.get_labels(unified_testing_df_preprocessed.LABEL)
+
+#training_testing_phase
+#split the data anch convert it from numpy to torch for RNN
+split_frac = 0.8
+batch_size = 50
+train_loader,valid_loader,test_loader = RNN_preparation.loader_creation(training_features,training_labels,testing_features
+                                ,testing_labels,split_frac,batch_size)
+
+train_on_gpu = RNN_preparation.gpu_check()
