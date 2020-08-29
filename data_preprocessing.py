@@ -198,8 +198,17 @@ class preprocessing(object):
             # this will take row and last columns and leave first columns with zeros (check last cell to understand) , then [:seq_length] will shrink long data
 
             features[i, -len(row):] = np.array(row)[:seq_length]
-
+        #convert festures to numpy
+        features = np.array(features)
         return features
+
+    def get_labels(self,downsampled_label):
+        #convert labels to int
+        labels = downsampled_label.astype(int)
+        #convert ot labels
+        labels = np.array(labels)
+        return labels
+
 
 
 
