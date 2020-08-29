@@ -1,5 +1,5 @@
 #imports
-from Models import Depression_detection
+from parsing_data import Depression_detection
 from data_preprocessing import preprocessing
 from pathlib import Path
 import pandas as pd

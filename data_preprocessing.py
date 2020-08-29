@@ -203,11 +203,22 @@ class preprocessing(object):
         return features
 
     def get_labels(self,downsampled_label):
+
+        '''
+        get labels from data frame
+        convert labels to integer
+        put labels in numpy array
+        
+        :param downsampled_label:
+        :return:
+        '''
         #convert labels to int
         labels = downsampled_label.astype(int)
         #convert ot labels
         labels = np.array(labels)
         return labels
+
+
 
 
 
