@@ -19,7 +19,7 @@ class preprocessing(object):
         self.tokenizer = Tokenizer(nlp.vocab)
 
 
-    def tokenization(self,unified_training_df):
+    def tokenization(self,unified_training_df,train=False):
         '''
         Preprocess the whole text ie.
          * remove https links and punctuation
@@ -56,9 +56,16 @@ class preprocessing(object):
         tokens = [token.lower_ for token in words if not token.is_space and not token.like_num]
 
         #save it to a pickle file
-        saveObject = (tokens )
-        with open("tokens.pickle","wb") as file :
-            pickle.dump(saveObject,file)
+
+        if train ==True:
+            saveObject = (tokens)
+            with open("tokens.pickle","wb") as file :
+                pickle.dump(saveObject,file)
+        else:
+            saveObject = (tokens )
+            with open("tokens_test.pickle","wb") as file :
+                pickle.dump(saveObject,file)
+
 
         return tokens
 
@@ -132,20 +139,24 @@ class preprocessing(object):
         length = len(text_insts)
         return length
 
-    def dataframe_preprocessing(self,unified_training_df):
+    def dataframe_preprocessing(self,unified_df,train=False):
         '''
         call the functions of preprocessing
-        :param unified_training_df:
+        :param unified_df:
         :return:
         '''
-        unified_training_df['urls_out'] = unified_training_df['TITLE_TEXT'].apply(self.out_urls, axis='columns')
-        unified_training_df['punctuation_out'] = unified_training_df['urls_out'].apply(self.out_punctuation, axis='columns')
-        unified_training_df['text_tokens'] = unified_training_df['punctuation_out'].apply(self.text_token, axis='columns')
-        unified_training_df['text_ints'] =  unified_training_df['text_tokens'].apply(self.text_ints, axis='columns')
-        unified_training_df['length'] = unified_training_df['text_ints'].apply(self.lenght_text, axis='columns')
+        unified_df['urls_out'] = unified_df['TITLE_TEXT'].apply(self.out_urls, axis='columns')
+        unified_df['punctuation_out'] = unified_df['urls_out'].apply(self.out_punctuation, axis='columns')
+        unified_df['text_tokens'] = unified_df['punctuation_out'].apply(self.text_token, axis='columns')
+        unified_df['text_ints'] =  unified_df['text_tokens'].apply(self.text_ints, axis='columns')
+        unified_df['length'] = unified_df['text_ints'].apply(self.lenght_text, axis='columns')
         # neglect all cells(subjects) with zero length (text and the label,..)
-        unified_training_df = unified_training_df[unified_training_df.length != 0]
-        unified_training_df.to_csv('./unified_training_df_preprocessed.csv')
+        unified_df = unified_df[unified_df.length != 0]
+        if train==True:
+            unified_df.to_csv('./unified_training_df_preprocessed.csv')
+
+        else:
+            unified_df.to_csv('./unified_testing_df_preprocessed.csv')
 
 
     def downsampling(self,unified_training_df_preprocessed):
@@ -208,7 +219,7 @@ class preprocessing(object):
         get labels from data frame
         convert labels to integer
         put labels in numpy array
-        
+
         :param downsampled_label:
         :return:
         '''
@@ -217,6 +228,9 @@ class preprocessing(object):
         #convert ot labels
         labels = np.array(labels)
         return labels
+
+
+
 
 
 
