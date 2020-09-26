@@ -155,7 +155,7 @@ embedding_dim = 300
 hidden_dim = 256 #128
 n_layers = 2 #2
 
-RNN_net = SentimentRNN(vocab_size, output_size, embedding_dim, hidden_dim, n_layers,train_on_gpu=train_on_gpu)
+#RNN_net = SentimentRNN(vocab_size, output_size, embedding_dim, hidden_dim, n_layers,train_on_gpu=train_on_gpu)
 
 #print(RNN_net)
 
@@ -163,21 +163,83 @@ lr = 0.001 #0.01
 epochs = 5 #10
 
 criterion = nn.BCELoss()
-optimizer = torch.optim.Adam(RNN_net.parameters(), lr=lr)
-optimizer = torch.optim.SGD(RNN_net.parameters(), lr=lr)
+#optimizer = torch.optim.Adam(RNN_net.parameters(), lr=lr)
+#optimizer = torch.optim.SGD(RNN_net.parameters(), lr=lr)
 
-RNN_preparation.RNN_training(RNN_net,lr=lr,epochs = epochs,train_on_gpu =train_on_gpu
-                    ,batch_size=batch_size,train_loader=train_loader,valid_loader=valid_loader,criterion =criterion ,optimizer=optimizer)
+#RNN_preparation.RNN_training(RNN_net,lr=lr,epochs = epochs,train_on_gpu =train_on_gpu
+#                     ,batch_size=batch_size,train_loader=train_loader,valid_loader=valid_loader,criterion =criterion ,optimizer=optimizer)
 
-RNN_net.load_state_dict(torch.load('model_trained_RNN_not_pretrained.pt'))
+#RNN_net.load_state_dict(torch.load('model_trained_RNN_not_pretrained.pt'))
 
-RNN_preparation.RNN_test(RNN_net,lr=lr,epochs = epochs,train_on_gpu =train_on_gpu
-                    ,batch_size=batch_size, test_loader=test_loader,criterion =criterion,optimizer=optimizer )
-
-
+#RNN_preparation.RNN_test(RNN_net,lr=lr,epochs = epochs,train_on_gpu =train_on_gpu
+#                     ,batch_size=batch_size, test_loader=test_loader,criterion =criterion,optimizer=optimizer )
 
 
 
 
 
+
+
+#Bert
+
+RANDOM_SEED_BERT = 42
+MAX_LEN_BERT = 512        #Max length training:  2400  , Max length testing:  7390
+BATCH_SIZE_BERT = 4
+CLASSES_BERT = 2
+
+np.random.seed(RANDOM_SEED_BERT)
+torch.manual_seed(RANDOM_SEED_BERT)
+PRE_TRAINED_MODEL_NAME = "bert-base-cased"
+tokenizer = BertTokenizer.from_pretrained(PRE_TRAINED_MODEL_NAME)
+
+device_for_BERT = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+
+#preparing_training_data
+df_train =downsampled_data
+df_train = df_train.drop(['Unnamed: 0', 'Unnamed: 0.1','Unnamed: 0.1.1','ID', 'DATE',
+       'urls_out', 'punctuation_out','text_tokens', 'text_ints', 'length'], axis=1)
+
+#preparing_test_data
+df_test = unified_testing_df_preprocessed
+df_test = df_test.drop(['Unnamed: 0', 'Unnamed: 0.1', 'ID', 'TITLE', 'DATE', 'INFO', 'TEXT',
+        'urls_out', 'punctuation_out', 'text_tokens',
+       'text_ints', 'length'], axis=1)
+
+
+
+data_loader_bert =Data_loader()
+train_data_loader = data_loader_bert.data_loader(df_train , tokenizer, MAX_LEN_BERT, BATCH_SIZE_BERT)
+test_data_loader = data_loader_bert.data_loader(df_test, tokenizer, MAX_LEN_BERT, BATCH_SIZE_BERT)
+
+
+#call Bert model
+model_BERT = BERTClassifier(CLASSES_BERT,PRE_TRAINED_MODEL_NAME = "bert-base-cased")
+model_BERT = model_BERT.to(device_for_BERT)
+
+EPOCHS = 1
+optimizer = AdamW(model_BERT.parameters(), lr=2e-5, correct_bias=False)
+total_steps = len(train_data_loader) * EPOCHS
+scheduler = get_linear_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=0,
+    num_training_steps=total_steps
+
+)
+loss_fn = nn.CrossEntropyLoss().to(device_for_BERT)
+
+
+#Training BERT
+training_Bert =training_Bert()
+training_Bert.train_model_preparation(model_BERT, train_data_loader, loss_fn, optimizer, device_for_BERT, scheduler, len(df_train))
+training_Bert.train_model(model_BERT,train_data_loader,loss_fn,optimizer,device_for_BERT,scheduler,df_train,EPOCHS)
+
+
+
+model_BERT.load_state_dict(torch.load('model_trained_Bert_pretrained.pt'))
+
+#Testing BERT
+testing_Bert = testing_Bert()
+testing_Bert.eval_model_preparation(model_BERT, test_data_loader, loss_fn, device_for_BERT, len(df_test))
+testing_Bert.eval_model(model_BERT,test_data_loader,loss_fn,device_for_BERT,df_test,EPOCHS)
 
