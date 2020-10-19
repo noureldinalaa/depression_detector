@@ -4,8 +4,10 @@ import torch.nn as nn
 
 import numpy as np
 
+import pandas as pd
+
 class training_testing():
-    def loader_creation(self,training_features,training_labels,testing_features,testing_labels,split_frac,batch_size):
+    def loader_creation(self,training_features,training_labels,testing_features,testing_labels,split_frac,batch_size,idx = 1):
 
         '''
         split the data and convert it from numpy to torch
@@ -20,10 +22,65 @@ class training_testing():
         '''
 
 
+
+        # ##cross validation
+        split_idx_1 = int(len(training_features) * 0.8)
+        train_x_80, train_x_1 = training_features[:split_idx_1], training_features[split_idx_1:]
+        train_y_80, train_y_1 = training_labels[:split_idx_1], training_labels[split_idx_1:]
+        split_idx_2 = int(len(train_x_80) * 0.5)
+        train_x_40_1, train_x_40_2 = train_x_80[:split_idx_2], train_x_80[split_idx_2:]
+        train_y_40_1, train_y_40_2= train_y_80[:split_idx_2], train_y_80[split_idx_2:]
+        split_idx_3 = int(len(train_y_40_1) * 0.5)
+        train_x_2, train_x_3 = train_x_40_1[:split_idx_3], train_x_40_1[split_idx_3:]
+        train_y_2, train_y_3= train_y_40_1[:split_idx_3], train_y_40_1[split_idx_3:]
+        split_idx_4 = int(len(train_y_40_2) * 0.5)
+        train_x_4, train_x_5 = train_x_40_2[:split_idx_4], train_x_40_2[split_idx_4:]
+        train_y_4, train_y_5= train_y_40_2[:split_idx_4], train_y_40_2[split_idx_4:]
+
+        def fold(idx):
+            if idx ==1:
+                fold_x_train = np.concatenate((train_x_2, train_x_3, train_x_4, train_x_5),axis=0)
+                fold_x_valid = train_x_1
+                fold_y_train = np.concatenate((train_y_2, train_y_3, train_y_4, train_y_5),axis=0)
+                fold_y_valid = train_y_1
+                return fold_x_train,fold_x_valid,fold_y_train,fold_y_valid
+
+            elif idx == 2:
+                fold_x_train = np.concatenate((train_x_1, train_x_3, train_x_4, train_x_5),axis=0)
+                fold_x_train = pd.concat(fold_x_train )
+                fold_x_valid = train_x_2
+                fold_y_train = np.concatenate((train_y_1, train_y_3, train_y_4, train_y_5),axis=0)
+                fold_y_valid = train_y_2
+                return fold_x_train,fold_x_valid,fold_y_train,fold_y_valid
+
+            elif idx == 3:
+                fold_x_train = np.concatenate((train_x_1, train_x_2, train_x_4, train_x_5),axis=0)
+                fold_x_valid = train_x_3
+                fold_y_train = np.concatenate((train_y_1, train_y_2, train_y_4, train_y_5),axis=0)
+                fold_y_valid = train_y_3
+                return fold_x_train,fold_x_valid,fold_y_train,fold_y_valid
+
+            elif idx == 4:
+                fold_x_train = np.concatenate((train_x_1, train_x_2, train_x_3, train_x_5),axis=0)
+                fold_x_valid = train_x_4
+                fold_y_train = np.concatenate((train_y_1, train_y_2, train_y_3, train_y_5),axis=0)
+                fold_y_valid = train_y_4
+                return fold_x_train,fold_x_valid,fold_y_train,fold_y_valid
+
+            elif idx == 5:
+                fold_x_train = np.concatenate((train_x_1, train_x_2, train_x_3, train_x_4),axis=0)
+                fold_x_valid = train_x_5
+                fold_y_train = np.concatenate((train_y_1, train_y_2, train_y_3, train_y_4),axis=0)
+                fold_y_valid = train_y_5
+                return fold_x_train,fold_x_valid,fold_y_train,fold_y_valid
+
+
         ## split data into training, validation, and test data (features and labels, x and y)
-        split_idx = int(len(training_features) * split_frac)
-        train_x, val_x = training_features[:split_idx], training_features[split_idx:]
-        train_y, val_y = training_labels[:split_idx], training_labels[split_idx:]
+        # split_idx = int(len(training_features) * split_frac)
+
+        train_x, val_x,train_y, val_y = fold(idx)
+        # train_x, val_x = training_features[:split_idx], training_features[split_idx:]
+        # train_y, val_y = training_labels[:split_idx], training_labels[split_idx:]
 
         #test_data
         test_x = testing_features[:]
@@ -55,6 +112,7 @@ class training_testing():
 
         clip = 5  # gradient clipping
         counter = 0
+        num_correct = 0
         # initialize tracker for minimum validation loss
         valid_loss_min = np.Inf
 
@@ -100,6 +158,8 @@ class training_testing():
                 nn.utils.clip_grad_norm_(RNN_net.parameters(), clip)
                 optimizer.step()
 
+
+
                 # loss stats
                 if counter % print_every == 0:
                     # Get validation loss
@@ -120,12 +180,28 @@ class training_testing():
 
                         val_losses.append(val_loss.item())
 
+                        # convert output probabilities to predicted class (0 or 1)
+                        pred = torch.round(output.squeeze())  # rounds to the nearest integer
+
+                        # compare predictions to true label
+                        correct_tensor = pred.eq(labels.float().view_as(pred))
+                        correct = np.squeeze(correct_tensor.numpy()) if not train_on_gpu else np.squeeze(
+                            correct_tensor.cpu().numpy())
+                        num_correct += np.sum(correct)
+
+                    # -- stats! -- ##
+                    # accuracy over all valid data
+                    valid_acc = num_correct / len(valid_loader.dataset)
+
+
+
                     RNN_net.train()
                     print("Epoch: {}/{}...".format(e + 1, epochs),
                           "Step: {}...".format(counter),
                           "Loss: {:.6f}...".format(loss.item()),
                           "Val Loss: {:.6f}".format(np.mean(val_losses)))
                     # torch.save(RNN_net.state_dict(), 'model_trained_RNN_not_pretrained.pt')
+                    print("Validation accuracy: {:.3f}".format(valid_acc))
 
 
                     if np.mean(val_losses) <= valid_loss_min:
@@ -135,7 +211,7 @@ class training_testing():
                         torch.save(RNN_net.state_dict(), 'model_trained_RNN_not_pretrained.pt')
                         valid_loss_min = np.mean(val_losses)
 
-
+                    num_correct = 0
     def RNN_test(self,RNN_net,lr=0.001,epochs = 5,train_on_gpu =False
                  ,batch_size=50,test_loader=3000,criterion =0 ,optimizer=0):
 

@@ -19,6 +19,12 @@ from torch.utils.data import Dataset, DataLoader
 from textwrap import wrap
 
 from Bert import Data_loader,DataSetDepression,BERTClassifier,training_Bert,testing_Bert
+from sklearn.utils import shuffle
+
+from sklearn.model_selection import RandomizedSearchCV
+from skorch import NeuralNetClassifier
+
+from scipy import stats
 
 # get th parent path
 base_path = Path.cwd().parent #Nour
@@ -114,6 +120,7 @@ unified_testing_df_preprocessed = pd.read_csv('./unified_testing_df_preprocessed
 # undepressed if it isn't downsampled .
 Dp_training.downsampling(unified_training_df_preprocessed)
 downsampled_data = pd.read_csv('./downsampled_data.csv')
+downsampled_data= shuffle(downsampled_data, random_state=0)
 
 #get training_text_ints
 text_integers_training = Dp_training.text_ints_extract(downsampled_data)
@@ -125,7 +132,7 @@ text_integers_testing = Dp_testing.text_ints_extract(unified_testing_df_preproce
 #pad the features
 #get the labels
 #convert to numpy
-seq_length = 50
+seq_length = 100
 
 #training Dataset
 training_features = Dp_training.pad_features(text_integers_training, seq_length)
@@ -141,38 +148,38 @@ testing_labels = Dp_testing.get_labels(unified_testing_df_preprocessed.LABEL)
 #split the data anch convert it from numpy to torch for RNN
 split_frac = 0.8
 batch_size = 50
-#train_loader,valid_loader,test_loader = RNN_preparation.loader_creation(training_features,training_labels,testing_features
-#                                ,testing_labels,split_frac,batch_size)
-
-#train_on_gpu = RNN_preparation.gpu_check()
 
 
+train_on_gpu = RNN_preparation.gpu_check()
 
 # Instantiate the model w/ hyperparams
 vocab_size = len(vocab_to_ints_training)+1 # +1 for the 0 padding + our word tokens
 output_size = 1
 embedding_dim = 300
-hidden_dim = 256 #128
-n_layers = 2 #2
+hidden_dim = 512 #128
+n_layers = 1 #2
 
-#RNN_net = SentimentRNN(vocab_size, output_size, embedding_dim, hidden_dim, n_layers,train_on_gpu=train_on_gpu)
+RNN_net = SentimentRNN(vocab_size, output_size, embedding_dim, hidden_dim, n_layers,train_on_gpu=train_on_gpu)
 
-#print(RNN_net)
+print(RNN_net)
 
-lr = 0.001 #0.01
+lr = 0.0001 #0.01
 epochs = 5 #10
 
 criterion = nn.BCELoss()
-#optimizer = torch.optim.Adam(RNN_net.parameters(), lr=lr)
-#optimizer = torch.optim.SGD(RNN_net.parameters(), lr=lr)
+optimizer = torch.optim.Adam(RNN_net.parameters(), lr=lr)
+# optimizer = torch.optim.SGD(RNN_net.parameters(), lr=lr)
 
-#RNN_preparation.RNN_training(RNN_net,lr=lr,epochs = epochs,train_on_gpu =train_on_gpu
-#                     ,batch_size=batch_size,train_loader=train_loader,valid_loader=valid_loader,criterion =criterion ,optimizer=optimizer)
+train_loader,valid_loader,test_loader = RNN_preparation.loader_creation(training_features,training_labels,testing_features
+                               ,testing_labels,split_frac,batch_size,idx=1)
 
-#RNN_net.load_state_dict(torch.load('model_trained_RNN_not_pretrained.pt'))
+RNN_preparation.RNN_training(RNN_net,lr=lr,epochs = epochs,train_on_gpu =train_on_gpu
+                    ,batch_size=batch_size,train_loader=train_loader,valid_loader=valid_loader,criterion =criterion ,optimizer=optimizer)
 
-#RNN_preparation.RNN_test(RNN_net,lr=lr,epochs = epochs,train_on_gpu =train_on_gpu
-#                     ,batch_size=batch_size, test_loader=test_loader,criterion =criterion,optimizer=optimizer )
+RNN_net.load_state_dict(torch.load('model_trained_RNN_not_pretrained.pt'))
+
+RNN_preparation.RNN_test(RNN_net,lr=lr,epochs = epochs,train_on_gpu =train_on_gpu
+                    ,batch_size=batch_size, test_loader=test_loader,criterion =criterion,optimizer=optimizer )
 
 
 
