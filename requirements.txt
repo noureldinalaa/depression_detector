@@ -1,0 +1,11 @@
+matplotlib
+pandas
+numpy
+transformers
+scikit-learn
+skorch
+bcolz
+spacy
+elementpath
+pathlib
+dstoolbox
