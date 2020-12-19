@@ -44,7 +44,7 @@ In this project we have tried to train our model using pretrained word vectors p
 4. To train RNN using Skorch:
 
     ```
-    RNN_skorch.py
+    python RNN_skorch.py
  
     ```
     
