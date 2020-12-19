@@ -47,7 +47,6 @@ class training_testing():
 
             elif idx == 2:
                 fold_x_train = np.concatenate((train_x_1, train_x_3, train_x_4, train_x_5),axis=0)
-                fold_x_train = pd.concat(fold_x_train )
                 fold_x_valid = train_x_2
                 fold_y_train = np.concatenate((train_y_1, train_y_3, train_y_4, train_y_5),axis=0)
                 fold_y_valid = train_y_2
@@ -73,6 +72,17 @@ class training_testing():
                 fold_y_train = np.concatenate((train_y_1, train_y_2, train_y_3, train_y_4),axis=0)
                 fold_y_valid = train_y_5
                 return fold_x_train,fold_x_valid,fold_y_train,fold_y_valid
+
+
+
+            #note later
+            # idx = 0
+            # -----
+            # val = fold[idx]
+            # for i = 1:4 do:
+            #    j=(idx + i)%5
+            #    train = train.concatenate(fold[j])
+            # idx+=1
 
 
         ## split data into training, validation, and test data (features and labels, x and y)
@@ -159,7 +169,6 @@ class training_testing():
                 optimizer.step()
 
 
-
                 # loss stats
                 if counter % print_every == 0:
                     # Get validation loss
@@ -208,7 +217,7 @@ class training_testing():
                         print('Validation loss decreased ({:.6f} --> {:.6f}).  Saving model ...'.format(
                             valid_loss_min,
                             np.mean(val_losses)))
-                        torch.save(RNN_net.state_dict(), 'model_trained_RNN_not_pretrained.pt')
+                        torch.save(RNN_net.state_dict(), 'model_trained_RNN_not_pretrained2.pt')
                         valid_loss_min = np.mean(val_losses)
 
                     num_correct = 0
@@ -284,7 +293,7 @@ class SentimentRNN(nn.Module):
     The RNN model that will be used to perform Sentiment analysis.
     """
 
-    def __init__(self, vocab_size, output_size, embedding_dim, hidden_dim, n_layers, drop_prob=0.5,  train_on_gpu =False):
+    def __init__(self, vocab_size, output_size, embedding_dim, hidden_dim, n_layers,weights_matrix=0, drop_prob=0.5,  train_on_gpu =False,pretrained=False):
         """
         Initialize the model by setting up the layers.
         """
@@ -298,10 +307,21 @@ class SentimentRNN(nn.Module):
 
         # define all layers
         # embedding and LSTM layers
-        self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        if pretrained == False:
+            self.embedding = nn.Embedding(vocab_size, embedding_dim)
+        #
+        elif pretrained == True:
+
+            #self.embedding = nn.Embedding.from_pretrained(weights_matrix) ## this step is same as the following steps
+
+            num_embeddings, embedding_dim = weights_matrix.shape
+            self.embedding = nn.Embedding(num_embeddings, embedding_dim)
+            self.embedding.load_state_dict({'weight': weights_matrix})
+
+
         self.lstm = nn.LSTM(embedding_dim, hidden_dim, n_layers, dropout=drop_prob, batch_first=True)
         # dropout layer
-        #self.dropout = nn.Dropout(0.3)
+        # self.dropout = nn.Dropout(0.3)
 
         # linear and sigmoid layers
         self.fc = nn.Linear(hidden_dim, output_size)
@@ -341,8 +361,13 @@ class SentimentRNN(nn.Module):
         weight = next(self.parameters()).data
 
         if (self.train_on_gpu):
-            hidden = (weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().cuda(),
-                      weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().cuda())
+            # hidden = (weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().cuda(),
+            #           weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().cuda())
+
+            device = torch.device("cuda:0")  # Uncomment this to run on GPU
+            hidden = (torch.randn(self.n_layers, batch_size, self.hidden_dim,device=device),
+                      torch.randn(self.n_layers, batch_size, self.hidden_dim,device=device))
+
 
         return hidden
 
