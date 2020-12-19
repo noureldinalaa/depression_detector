@@ -51,7 +51,7 @@ In this project we have tried to train our model using pretrained word vectors p
 ## Results
 Accuracy in both RNN's Models was almost the same, with accuracy around 80 % on training dataset , 72% on validation dataset and 65% on unseen test dataset. While in Bert accuracy was more promising, with accuracy of 93 % on training dataset and 72% on validation dataset.Noticing that we have tried different hyperparameters and these were the highest results obtained.
 
-**For more detailed explanation of the steps, please find it in this [link]( https://github.com/noureldinalaa/depression_detector/blob/master/project_explanation/Detecting_Depression_on_social_media.pdf) 
+**For more detailed explanation of the steps, please find it in this [link]( https://github.com/noureldinalaa/depression_detector/blob/master/project_explanation/Detecting_Depression_on_social_media.pdf)** 
 
 
 ## Next steps
